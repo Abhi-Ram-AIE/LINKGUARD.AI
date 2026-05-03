@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LINKGUARD-AI</title>
+
+<style>
+:root {
+    --bg: #0b1220;
+    --panel: rgba(20, 30, 60, 0.6);
+    --accent: #00f5ff;
+    --low: #22c55e;
+    --medium: #facc15;
+    --high: #ef4444;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: radial-gradient(circle at top, #162447, var(--bg));
+    color: white;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Container */
+.container {
+    width: 95%;
+    max-width: 1100px;
+    height: 90vh;
+    padding: 25px;
+    border-radius: 20px;
+    background: var(--panel);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 40px rgba(0,255,255,0.15);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header h1 {
+    color: var(--accent);
+    margin: 0;
+}
+
+/* Input */
+.input-box {
+    display: flex;
+    margin-top: 15px;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    background: #0f172a;
+    color: white;
+}
+
+button {
+    padding: 14px 25px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Dashboard */
+.dashboard {
+    margin-top: 20px;
+    flex: 1;
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Cards */
+.card {
+    background: #0f172a;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 0 20px rgba(0,255,255,0.08);
+}
+
+/* Risk Badge */
+.badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.low { background: var(--low); }
+.medium { background: var(--medium); }
+.high { background: var(--high); }
+
+/* Progress Bar */
+.meter {
+    height: 12px;
+    background: #1e293b;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.meter-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.8s ease;
+}
+
+/* Comparison Panel */
+.comparison {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.compare-box {
+    width: 48%;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.ai-box {
+    border: 2px solid #00f5ff;
+}
+
+.traditional-box {
+    border: 2px solid #f97316;
+}
+
+/* Loader */
+.loader {
+    display: none;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.spinner {
+    border: 4px solid #1e293b;
+    border-top: 4px solid var(--accent);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: auto;
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+/* Highlight text */
+#threatType {
+    color: #38bdf8;
+    font-weight: bold;
+}
+
+#comparisonNote {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #facc15;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <div style="font-size:35px;">🛡️</div>
+        <div>
+            <h1>LINKGUARD-AI</h1>
+            <p>Advanced URL Threat Intelligence</p>
+        </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-box">
+        <input id="urlInput" placeholder="Enter URL...">
+        <button onclick="scanURL()">Scan</button>
+    </div>
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <p>Analyzing URL...</p>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard">
+
+        <!-- LEFT PANEL -->
+        <div class="card">
+            <h3>Threat Summary</h3>
+
+            <p>Risk Level:
+                <span id="riskBadge" class="badge"></span>
+            </p>
+
+            <p>Malicious Probability:
+                <span id="probability"></span>
+            </p>
+
+            <div class="meter">
+                <div id="riskMeter" class="meter-fill"></div>
+            </div>
+
+            <p style="margin-top:15px;">
+                Threat Type:
+                <span id="threatType"></span>
+            </p>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="card">
+            <h3>AI vs Traditional Comparison</h3>
+
+            <div class="comparison">
+                <div class="compare-box ai-box">
+                    <h4>AI Model</h4>
+                    <p id="aiRisk"></p>
+                </div>
+
+                <div class="compare-box traditional-box">
+                    <h4>Traditional</h4>
+                    <p id="baselineResult"></p>
+                </div>
+            </div>
+
+            <p id="comparisonNote"></p>
+
+            <h4 style="margin-top:20px;">Explainable AI</h4>
+            <p id="explanation"></p>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function scanURL() {
+    const url = document.getElementById("urlInput").value;
+
+    const loader = document.getElementById("loader");
+    const dashboard = document.getElementById("dashboard");
+
+    dashboard.style.display = "none";
+    loader.style.display = "block";
+
+    fetch("/check-url", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({url: url})
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        loader.style.display = "none";
+        dashboard.style.display = "grid";
+
+        // Badge
+        const badge = document.getElementById("riskBadge");
+        badge.innerText = data.risk_level;
+        badge.className = "badge";
+
+        if (data.risk_level === "LOW") badge.classList.add("low");
+        else if (data.risk_level === "MEDIUM") badge.classList.add("medium");
+        else badge.classList.add("high");
+
+        // Probability
+        document.getElementById("probability").innerText =
+            (data.malicious_probability * 100).toFixed(2) + "%";
+
+        // Meter
+        const meter = document.getElementById("riskMeter");
+        meter.style.width = data.risk_score + "%";
+
+        if (data.risk_level === "LOW") meter.style.background = "#22c55e";
+        else if (data.risk_level === "MEDIUM") meter.style.background = "#facc15";
+        else meter.style.background = "#ef4444";
+
+        // Threat Type
+        document.getElementById("threatType").innerText = data.threat_type;
+
+        // AI vs Traditional
+        document.getElementById("aiRisk").innerText = data.risk_level;
+        document.getElementById("baselineResult").innerText = data.baseline_result;
+
+        // Explanation
+        document.getElementById("explanation").innerText = data.explanation;
+
+        // Comparison message
+        let note = "";
+
+        if (data.risk_level === "HIGH" && data.baseline_result !== "HIGH") {
+            note = "⚠️ AI detected a high-risk threat missed by traditional system";
+        }
+        else if (data.risk_level === "MEDIUM" && data.baseline_result === "LOW") {
+            note = "⚠️ AI identified moderate risk not detected by traditional system";
+        }
+        else if (data.risk_level === data.baseline_result) {
+            note = "✔ Both systems agree on the assessment";
+        }
+        else {
+            note = "ℹ️ Traditional system is more conservative, AI considers this safe";
+        }
+
+        document.getElementById("comparisonNote").innerText = note;
+
+    })
+    .catch(err => {
+        loader.style.display = "none";
+        alert("Error processing URL");
+        console.error(err);
+    });
+}
+</script>
+
+</body>
+</html>
