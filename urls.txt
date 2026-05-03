@@ -1,0 +1,13 @@
+http://secure-login-paypal.verify-user.info/login
+http://paypal.com.user-authentication.verify-session.net
+http://account-update-google.security-alerts.co/verify
+http://bankofamerica.secure-login.alert-update.info
+http://amazon.verify-account.security-check.co/login
+
+
+http://secure-login-paypal.verify-user.info/login
+http://paypal.com.user-authentication.verify-session.net
+http://account-update-google.security-alerts.co/verify
+http://bankofamerica.secure-login.alert-update.info
+http://amazon.verify-account.security-check.co/login
+

@@ -1,0 +1,328 @@
+PROJECT TITLE:
+LINKGUARD-AI – Explainable AI-Powered URL Phishing & Security Risk Detection System
+
+
+====================================================
+1. OVERALL PROJECT OVERVIEW
+====================================================
+
+LINKGUARD-AI is a full-fledged URL security scanner that detects phishing and malicious URLs using a hybrid approach combining:
+- Machine Learning
+- Rule-based security analysis
+- Explainable AI (XAI)
+
+Unlike traditional blacklist-based systems, LINKGUARD-AI analyzes the FULL URL (domain, path, query) to detect modern phishing techniques, including AI-generated phishing URLs.
+
+
+====================================================
+2. FLOW OF EXECUTION (END-TO-END)
+====================================================
+
+1. User enters a URL in the frontend UI (index.html)
+2. Flask backend (app.py) receives the request
+3. Features are extracted from the FULL URL
+4. Trained ML model predicts phishing probability
+5. Hybrid Risk Fusion Engine computes final risk
+6. Explainable AI generates human-readable explanation
+7. Risk result is returned to UI and displayed
+
+FLOW:
+User → UI → Flask API → Feature Extraction → ML Prediction
+→ Hybrid Risk Fusion → Explainable AI → UI Output
+
+
+====================================================
+3. MODULE-WISE EXPLANATION WITH CODE
+====================================================
+
+
+----------------------------------------------------
+3.1 app.py – MAIN APPLICATION CONTROLLER
+----------------------------------------------------
+
+ROLE:
+- Entry point of the application
+- Handles HTTP requests
+- Coordinates all modules
+
+KEY CODE SNIPPET:
+
+```python
+@app.route("/check-url", methods=["POST"])
+def check_url():
+    data = request.get_json()
+    url = data.get("url")
+
+    risk_result = assess_url_risk(url)
+
+    shap_vals, feature_names = get_shap_values_for_url(url)
+    explanation_text = generate_explanation(
+        shap_vals, feature_names
+    )
+
+    return jsonify({
+        "url": url,
+        "risk_level": risk_result["risk_level"],
+        "risk_score": risk_result["risk_score"],
+        "malicious_probability": risk_result["malicious_probability"],
+        "explanation": explanation_text
+    })
+WHY IMPORTANT:
+
+Central orchestration logic
+
+Demonstrates clean separation of concerns
+
+Industry-style API design
+
+3.2 data_loader.py – DATA INGESTION MODULE
+
+ROLE:
+
+Loads datasets only
+
+No ML or feature logic
+
+Prevents data leakage
+
+KEY CODE:
+
+def load_phishtank():
+    df = pd.read_csv("../datasets/verified_online.csv")
+    return df
+
+
+WHY IMPORTANT:
+
+Clean architecture
+
+Makes retraining and dataset replacement easy
+
+3.3 feature_extraction.py – CORE SECURITY INTELLIGENCE
+
+ROLE:
+
+Extracts security-relevant features from FULL URL
+
+Most critical module in the project
+
+IMPORTANT FEATURES IMPLEMENTED:
+
+Lexical analysis
+
+Structural analysis
+
+Brand impersonation detection
+
+Entropy and randomness analysis
+
+KEY CODE SNIPPETS:
+
+Suspicious keyword detection:
+
+def count_suspicious_keywords(text):
+    return sum(1 for word in SUSPICIOUS_KEYWORDS if word in text.lower())
+
+
+Brand impersonation detection:
+
+def detect_brand_impersonation(url):
+    parsed = urlparse(url)
+    domain = parsed.netloc.lower()
+    for brand in BRANDS:
+        if brand in url.lower() and brand not in domain:
+            return 1
+    return 0
+
+
+Entropy calculation:
+
+def shannon_entropy(s):
+    probs = [float(s.count(c)) / len(s) for c in set(s)]
+    return -sum(p * math.log2(p) for p in probs)
+
+
+WHY IMPORTANT:
+
+Detects AI-generated phishing URLs
+
+Works even for zero-day attacks
+
+Stronger than blacklist-based systems
+
+3.4 model_training.py – MACHINE LEARNING PIPELINE
+
+ROLE:
+
+Combines datasets
+
+Extracts features
+
+Trains Random Forest classifier
+
+KEY CODE:
+
+model = RandomForestClassifier(
+    n_estimators=300,
+    max_depth=25,
+    class_weight="balanced",
+    random_state=42
+)
+model.fit(X_train, y_train)
+
+
+WHY RANDOM FOREST:
+
+Handles non-linear patterns
+
+Robust to noise
+
+Works well with SHAP explainability
+
+METRICS USED:
+
+Accuracy
+
+Precision
+
+Recall (prioritized)
+
+F1-score
+
+3.5 risk_scoring.py – HYBRID RISK FUSION ENGINE
+
+ROLE:
+
+Converts ML probability into final security decision
+
+Improves precision without sacrificing recall
+
+KEY CODE (MOST IMPORTANT):
+
+final_score = (
+    0.55 * ml_prob +
+    0.20 * brand_score +
+    0.15 * keyword_score +
+    0.10 * entropy_score
+)
+
+
+Risk Level Mapping:
+
+if final_score >= 0.65:
+    level = "HIGH"
+elif final_score >= 0.35:
+    level = "MEDIUM"
+else:
+    level = "LOW"
+
+
+WHY IMPORTANT:
+
+Makes system industry-grade
+
+Prevents over-reliance on ML
+
+Matches real-world security systems
+
+3.6 explainability.py – EXPLAINABLE AI (SHAP)
+
+ROLE:
+
+Computes feature importance using SHAP
+
+Enables transparency and trust
+
+KEY CODE:
+
+explainer = shap.TreeExplainer(model)
+shap_values = explainer.shap_values(feature_df)
+
+
+WHY IMPORTANT:
+
+Prevents black-box criticism
+
+Makes system explainable to users and faculty
+
+3.7 explain_text.py – HUMAN-READABLE EXPLANATIONS
+
+ROLE:
+
+Converts SHAP values into plain English
+
+KEY CODE:
+
+FEATURE_EXPLANATIONS = {
+    "brand_impersonation": "the URL impersonates a well-known brand",
+    "suspicious_keyword_count": "the URL contains suspicious security-related keywords"
+}
+
+
+Explanation logic:
+
+return "The URL is considered risky because " + ", ".join(reasons)
+
+
+WHY IMPORTANT:
+
+Bridges AI output with human understanding
+
+Critical for trust and usability
+
+3.8 Frontend (index.html)
+
+ROLE:
+
+User interaction
+
+Visualizes risk, probability, and explanation
+
+IMPORTANT UI ELEMENTS:
+
+Threat meter
+
+Risk badges
+
+Animated scan effect
+
+WHY IMPORTANT:
+
+Improves user experience
+
+Makes demo and PPT impactful
+
+====================================================
+4. WHY THIS PROJECT IS INDUSTRY-RELEVANT
+
+Detects zero-day phishing URLs
+
+Handles AI-generated phishing
+
+Uses Explainable AI
+
+Hybrid security architecture
+
+Scalable and extensible design
+
+====================================================
+5. LIMITATIONS
+
+No live threat intelligence feed
+
+No browser extension yet
+
+No DNS or hosting reputation analysis
+
+====================================================
+6. FUTURE ENHANCEMENTS
+
+Browser extension integration
+
+QR code URL scanning
+
+Adversarial ML training
+
+Cloud deployment with Docker
+
+Integration with VirusTotal API
